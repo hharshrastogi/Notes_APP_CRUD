@@ -1,4 +1,4 @@
-import Notes from "./pages/Notes";
+import Notes from "./pages/Notes.jsx";
 import NavBar from "./components/Navbar";
 
 function App() {

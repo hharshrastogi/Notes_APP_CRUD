@@ -9,34 +9,59 @@ const Notes = () => {
   const [editMode, setEditMode] = useState(false);
   const [currentNote, setCurrentNote] = useState(null);
 
+  
   const handlesubmit = (e) => {
     e.preventDefault();
     if (!title.trim() || !content.trim()) return;
 
+    const noteData = {
+      title,
+      content,
+    };
+
     if (editMode) {
-      const updatednotes = notes.map((note) =>
-        note.id === currentNote.id ? { ...note, title, content } : note
-      );
-      setNotes(updatednotes);
-      setEditMode(false);
-      setCurrentNote(null);
+      // If in edit mode, update the note via PUT request
+      fetch(`http://localhost:5000/notes/${currentNote.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(noteData),
+      })
+        .then((response) => response.json())
+        .then((updatedNote) => {
+          setNotes(notes.map((note) => (note.id === currentNote.id ? updatedNote : note)));
+          setEditMode(false);
+          setCurrentNote(null);
+        });
     } else {
-      const newNote = {
-        id: Date.now(),
-        title,
-        content,
-      };
-      setNotes([...notes, newNote]);
+      // If not in edit mode, create a new note via POST request
+      fetch("http://localhost:5000/notes", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(noteData),
+      })
+        .then((response) => response.json())
+        .then((newNote) => {
+          setNotes([...notes, newNote]);
+        });
     }
 
     setTitle("");
     setContent("");
   };
 
+
   const handleDelete = (id) => {
-    const updatednotes = notes.filter((note) => note.id !== id);
-    setNotes(updatednotes);
+    fetch(`http://localhost:5000/notes/${id}`, {
+      method: "DELETE",
+    }).then(() => {
+      setNotes(notes.filter((note) => note.id !== id));
+    });
   };
+
 
   const handleEdit = (note) => {
     setTitle(note.title);
@@ -46,15 +71,11 @@ const Notes = () => {
   };
 
   useEffect(() => {
-    localStorage.setItem("notes", JSON.stringify(notes));
-  }, [notes]);
-
-  useEffect(() => {
-    const storedNotes = localStorage.getItem("notes");
-    if (storedNotes) {
-      setNotes(JSON.parse(storedNotes));
-    }
+    fetch("http://localhost:5000/notes")
+      .then((response) => response.json())
+      .then((data) => setNotes(data));
   }, []);
+  
   return (
     <>
       <NavBar />
@@ -86,20 +107,18 @@ const Notes = () => {
             >
               {editMode ? "Save Changes" : "Add Note"}
             </button>
-
-            
           </div>
         </form>
         <div className="flex flex-wrap gap-4 mx-4">
-              {notes.map((note) => (
-                <NoteCard
-                  key={note.id}
-                  note={note}
-                  onDelete={handleDelete}
-                  onEdit={handleEdit}
-                />
-              ))}
-            </div>
+          {notes.map((note) => (
+            <NoteCard
+              key={note.id}
+              note={note}
+              onDelete={handleDelete}
+              onEdit={handleEdit}
+            />
+          ))}
+        </div>
       </div>
     </>
   );
