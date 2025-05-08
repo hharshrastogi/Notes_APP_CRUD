@@ -1,13 +1,10 @@
-import { useState } from "react";
 import Notes from "./pages/Notes";
+import NavBar from "./components/Navbar";
 
 function App() {
-  const [count, setCount] = useState(0);
-
   return (
     <>
       <Notes />
-      <h1 className="text-3xl p-8">Hello!</h1>
     </>
   );
 }
